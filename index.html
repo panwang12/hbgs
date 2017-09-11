@@ -165,7 +165,7 @@
                 <p >{{tm.title}}</p>
                 <div v-for="an in tm.options" :class="tm.class">
                     <label>
-                        <input v-bind:type="an.type" v-on:click="getScore(an.name,an.value)" v-bind:name="an.name" v-bind:value="an.value">
+                        <input  v-bind:type="an.type" v-on:click="getScore(an.name,an.value)" v-bind:name="an.name" v-bind:value="an.value">
                         {{an.score}}
                     </label>
                 </div>
@@ -173,6 +173,7 @@
         </div>
         <input type="submit" value="提交">
     </form>
+    {{msg}}
     <div id="pageNum"><button  id="preItem" v-on:click="preQuestion">上一题</button>第 <span>{{pageN+1}}</span>/10题<button v-on:click="nextQuestion('next',$event)" id="nextItem">下一题</button></div>
 </div>
 <script type="text/javascript" src="js/jquery-1.11.3.js"></script>
@@ -379,7 +380,21 @@
     var app1=new Vue({
         el:"#app1",
         data:{
-            msg:{},
+            msg:{
+                q1_t1:"",
+                q1_t1_1:"",
+                q1_t2:"",
+                q1_t3:"",
+                q2_t1:"",
+                q2_t2:"",
+                q2_t3:"",
+                q3_t1:"",
+                q3_t2:"",
+                q3_t3:"",
+                q4_t1:"",
+                q4_t2:"",
+                q4_t3:""
+            },
             pageN:0,
             testQuestion:testQuestion
         },
