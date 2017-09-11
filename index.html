@@ -33,9 +33,8 @@
     </style>
 </head>
 <body>
-<div class="container">
+<div class="container" id="app1">
     <h2 style="text-align: center">2017年湖北省国税局纳税人满意度专项调查问卷</h2>
-    <!--第一题-->
     <!--<div>
         <h4 >1. 请您对影响办税简便性的几个重要因素进行评价(0分为最低分，5分为最高分)：</h4>
         <div class="row">
@@ -159,134 +158,277 @@
             </div>
         </div>
     </div>-->
-    <div>
-        <h4 >1. 请您对影响办税简便性的几个重要因素进行评价(0分为最低分，5分为最高分)：</h4>
-        <div class="row">
-            <p>1-1表单填写简捷</p>
-            <div class=" col-xs-6 col-sm-2"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-1" value="1">
-                    1分
-                </label>
-            </div>
-            <div class="col-xs-6 col-sm-2"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-1" value="2">
-                    2分
-                </label>
-            </div>
-            <div class="col-xs-6 col-sm-2"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-1" value="3">
-                    3分
-                </label>
-            </div>
-            <div class="col-xs-6 col-sm-2"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-1" value="4">
-                    4分
-                </label>
-            </div>
-            <div class="col-xs-6 col-sm-2"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-1" value="5">
-                    5分
-                </label>
+    <form @submit.prevent="submit">
+        <div v-for="qs in testQuestion" v-bind:style="{display:qs.hidden}">
+            <h4 >{{qs.title}}</h4>
+            <div v-for="tm in qs.item"  v-if="tm.isRender" v-bind:class="qs.class">
+                <p >{{tm.title}}</p>
+                <div v-for="an in tm.options" :class="tm.class">
+                    <label>
+                        <input v-bind:type="an.type" v-on:click="getScore(an.name,an.value)" v-bind:name="an.name" v-bind:value="an.value">
+                        {{an.score}}
+                    </label>
+                </div>
             </div>
         </div>
-        <div class="row bg-danger" style="display: block">
-            <p>请问您具体是对哪个表单的简化情况不满意？</p>
-            <div class=" col-xs-12 col-sm-4"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-1-1" value="1">
-                    增值税申报表
-                </label>
-            </div>
-            <div class="col-xs-12 col-sm-4"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-1-1" value="2">
-                    企业所得税申报表
-                </label>
-            </div>
-            <div class="col-xs-12 col-sm-4"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-1-1" value="3">
-                    其它
-                </label>
-            </div>
-        </div>
-        <div class="row">
-            <p>1-2资料报送精简</p>
-            <div class="col-xs-6 col-sm-2"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-2" value="1">
-                    1分
-                </label>
-            </div>
-            <div class="col-xs-6 col-sm-2"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-2" value="2">
-                    2分
-                </label>
-            </div>
-            <div class="col-xs-6 col-sm-2"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-2" value="3">
-                    3分
-                </label>
-            </div>
-            <div class="col-xs-6 col-sm-2"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-2" value="4">
-                    4分
-                </label>
-            </div>
-            <div class="col-xs-6 col-sm-2"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-2" value="5">
-                    5分
-                </label>
-            </div>
-        </div>
-        <div class="row">
-            <p>1-3办税流程简便</p>
-            <div class="col-xs-6 col-sm-2"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-3" value="1">
-                    1分
-                </label>
-            </div>
-            <div class="col-xs-6 col-sm-2"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-3" value="2">
-                    2分
-                </label>
-            </div>
-            <div class="col-xs-6 col-sm-2"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-3" value="3">
-                    3分
-                </label>
-            </div>
-            <div class="col-xs-6 col-sm-2"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-3" value="4">
-                    4分
-                </label>
-            </div>
-            <div class="col-xs-6 col-sm-2"  class="radio">
-                <label>
-                    <input type="radio" name="content-1-3" value="5">
-                    5分
-                </label>
-            </div>
-        </div>
-    </div>
-
-    <div id="pageNum">第 <span>1</span>/10题</div>
+        <input type="submit" value="提交">
+    </form>
+    <div id="pageNum"><button  id="preItem" v-on:click="preQuestion">上一题</button>第 <span>{{pageN+1}}</span>/10题<button v-on:click="nextQuestion('next',$event)" id="nextItem">下一题</button></div>
 </div>
 <script type="text/javascript" src="js/jquery-1.11.3.js"></script>
 <script type="text/javascript" src="js/bootstrap.js"></script>
 <script type="text/javascript" src="js/vue.js"></script>
+<script type="text/javascript" src="js/vue-resource.js"></script>
+<script>
+    var testQuestion=[
+        {
+            title:"1. 请您对影响办税简便性的几个重要因素进行评价(0分为最低分，5分为最高分):",
+            class:["row"],
+            hidden:"block",
+            item:[
+                {
+                    title:"1-1表单填写简捷",
+                    class:["col-xs-6","col-sm-2"],
+                    isRender:true,
+                    options:[
+                        {name:"q1_t1", value:1, score:"1分",type:"radio"},
+                        {name:"q1_t1", value:2, score:"2分",type:"radio"},
+                        {name:"q1_t1", value:3, score:"3分",type:"radio"},
+                        {name:"q1_t1", value:4, score:"4分",type:"radio"},
+                        {name:"q1_t1", value:5, score:"5分",type:"radio"},
+                        {name:"q1_t1", value:6, score:"不了解",type:"radio"}
+                    ]
+                },
+                {
+                    title: "请问您具体是对哪个表单的简化情况不满意？",
+                    class: ["col-xs-12", "col-sm-4"],
+                    isRender:false,
+                    options: [
+                        {name: "q1_t1_1", value: 1, score: "增值税申报表",type:"radio"},
+                        {name: "q1_t1_1", value: 2, score: "企业所得税申报表",type:"radio"},
+                        {name: "q1_t1_1", value: 3, score: "企业所得税申报表",type:"radio"}
+                    ]
+                },
+                {
+                    title:"1-2资料报送精简",
+                    class:["col-xs-6","col-sm-2"],
+                    isRender:true,
+                    options:[
+                        {name:"q1_t2", value:1, score:"1分",type:"radio"},
+                        {name:"q1_t2", value:2, score:"2分",type:"radio"},
+                        {name:"q1_t2", value:3, score:"3分",type:"radio"},
+                        {name:"q1_t2", value:4, score:"4分",type:"radio"},
+                        {name:"q1_t2", value:5, score:"5分",type:"radio"},
+                        {name:"q1_t2", value:6, score:"不了解",type:"radio"}
+                    ]
+                },
+                {
+                    title:"1-3办税流程简便",
+                    class:["col-xs-6","col-sm-2"],
+                    isRender:true,
+                    options:[
+                        {name:"q1_t3", value:1, score:"1分",type:"radio"},
+                        {name:"q1_t3", value:2, score:"2分",type:"radio"},
+                        {name:"q1_t3", value:3, score:"3分",type:"radio"},
+                        {name:"q1_t3", value:4, score:"4分",type:"radio"},
+                        {name:"q1_t3", value:5, score:"5分",type:"radio"},
+                        {name:"q1_t3", value:6, score:"不了解",type:"radio"}
+                    ]
+                }
+            ]
+        },
+        {
+            title:"2、请您对发票相关工作进行评价(0分为最低分，5分为最高分)：",
+            class:["row"],
+            hidden:"none",
+            item:[
+                {
+                    title:"2-1发票申领",
+                    class:["col-xs-6","col-sm-2"],
+                    isRender:true,
+                    options:[
+                        {name:"q2_t1", value:1, score:"1分",type:"radio"},
+                        {name:"q2_t1", value:2, score:"2分",type:"radio"},
+                        {name:"q2_t1", value:3, score:"3分",type:"radio"},
+                        {name:"q2_t1", value:4, score:"4分",type:"radio"},
+                        {name:"q2_t1", value:5, score:"5分",type:"radio"},
+                        {name:"q2_t1", value:6, score:"不了解",type:"radio"}
+                    ]
+                },
+                {
+                    title:"2-2发票增版增量",
+                    class:["col-xs-6","col-sm-2"],
+                    isRender:true,
+                    options:[
+                        {name:"q2_t2", value:1, score:"1分",type:"radio"},
+                        {name:"q2_t2", value:2, score:"2分",type:"radio"},
+                        {name:"q2_t2", value:3, score:"3分",type:"radio"},
+                        {name:"q2_t2", value:4, score:"4分",type:"radio"},
+                        {name:"q2_t2", value:5, score:"5分",type:"radio"},
+                        {name:"q2_t2", value:6, score:"不了解",type:"radio"}
+                    ]
+                },
+                {
+                    title:"2-3代开发票简便",
+                    class:["col-xs-6","col-sm-2"],
+                    isRender:true,
+                    options:[
+                        {name:"q2_t3", value:1, score:"1分",type:"radio"},
+                        {name:"q2_t3", value:2, score:"2分",type:"radio"},
+                        {name:"q2_t3", value:3, score:"3分",type:"radio"},
+                        {name:"q2_t3", value:4, score:"4分",type:"radio"},
+                        {name:"q2_t3", value:5, score:"5分",type:"radio"},
+                        {name:"q2_t3", value:6, score:"不了解",type:"radio"}
+                    ]
+                }
+            ]
+        },
+        {
+            title:"3、请您对税收政策宣传相关工作进行评价(0分为最低分，5分为最高分):",
+            class:["row"],
+            hidden:"none",
+            item:[
+                {
+                    title:"3-1渠道多样",
+                    class:["col-xs-6","col-sm-2"],
+                    isRender:true,
+                    options:[
+                        {name:"q3_t1", value:1, score:"1分",type:"radio"},
+                        {name:"q3_t1", value:2, score:"2分",type:"radio"},
+                        {name:"q3_t1", value:3, score:"3分",type:"radio"},
+                        {name:"q3_t1", value:4, score:"4分",type:"radio"},
+                        {name:"q3_t1", value:5, score:"5分",type:"radio"},
+                        {name:"q3_t1", value:6, score:"不了解",type:"radio"}
+                    ]
+                },
+                {
+                    title:"3-2宣传及时",
+                    class:["col-xs-6","col-sm-2"],
+                    isRender:true,
+                    options:[
+                        {name:"q3_t2", value:1, score:"1分",type:"radio"},
+                        {name:"q3_t2", value:2, score:"2分",type:"radio"},
+                        {name:"q3_t2", value:3, score:"3分",type:"radio"},
+                        {name:"q3_t2", value:4, score:"4分",type:"radio"},
+                        {name:"q3_t2", value:5, score:"5分",type:"radio"},
+                        {name:"q3_t2", value:6, score:"不了解",type:"radio"}
+                    ]
+                },
+                {
+                    title:"3-3解读清晰",
+                    class:["col-xs-6","col-sm-2"],
+                    isRender:true,
+                    options:[
+                        {name:"q3_t3", value:1, score:"1分",type:"radio"},
+                        {name:"q3_t3", value:2, score:"2分",type:"radio"},
+                        {name:"q3_t3", value:3, score:"3分",type:"radio"},
+                        {name:"q3_t3", value:4, score:"4分",type:"radio"},
+                        {name:"q3_t3", value:5, score:"5分",type:"radio"},
+                        {name:"q3_t3", value:6, score:"不了解",type:"radio"}
+                    ]
+                }
+            ]
+        },
+        {
+            title:"4、请您对网上申报软件进行评价(0分为最低分，5分为最高分):",
+            class:["row"],
+            hidden:"none",
+            item:[
+                {
+                    title:"4-1操作便捷",
+                    class:["col-xs-6","col-sm-2"],
+                    isRender:true,
+                    options:[
+                        {name:"q4_t1", value:1, score:"1分",type:"radio"},
+                        {name:"q4_t1", value:2, score:"2分",type:"radio"},
+                        {name:"q4_t1", value:3, score:"3分",type:"radio"},
+                        {name:"q4_t1", value:4, score:"4分",type:"radio"},
+                        {name:"q4_t1", value:5, score:"5分",type:"radio"},
+                        {name:"q4_t1", value:6, score:"不了解",type:"radio"}
+                    ]
+                },
+                {
+                    title:"4-2操作便捷",
+                    class:["col-xs-6","col-sm-2"],
+                    isRender:true,
+                    options:[
+                        {name:"q4_t2", value:1, score:"1分",type:"radio"},
+                        {name:"q4_t2", value:2, score:"2分",type:"radio"},
+                        {name:"q4_t2", value:3, score:"3分",type:"radio"},
+                        {name:"q4_t2", value:4, score:"4分",type:"radio"},
+                        {name:"q4_t2", value:5, score:"5分",type:"radio"},
+                        {name:"q4_t2", value:6, score:"不了解",type:"radio"}
+                    ]
+                },
+                {
+                    title:"4-3维护及时",
+                    class:["col-xs-6","col-sm-2"],
+                    isRender:true,
+                    options:[
+                        {name:"q4_t3", value:1, score:"1分",type:"radio"},
+                        {name:"q4_t3", value:2, score:"2分",type:"radio"},
+                        {name:"q4_t3", value:3, score:"3分",type:"radio"},
+                        {name:"q4_t3", value:4, score:"4分",type:"radio"},
+                        {name:"q4_t3", value:5, score:"5分",type:"radio"},
+                        {name:"q4_t3", value:6, score:"不了解",type:"radio"}
+                    ]
+                }
+            ]
+        }
+    ]
+    var app1=new Vue({
+        el:"#app1",
+        data:{
+            msg:{},
+            pageN:0,
+            testQuestion:testQuestion
+        },
+        methods:{
+            getScore:function(name,score){
+                if(name==="q1_t1"){
+                    if(score<3){
+                        this.testQuestion[0].item[1].isRender=true;
+                    }else{
+                        this.testQuestion[0].item[1].isRender=false;
+                    }
+                }
+                this.msg[name]=score;
+            },
+            preQuestion:function(){
+                this.testQuestion[this.pageN].hidden="none";
+                this.pageN--;
+                if(this.pageN>this.testQuestion.length-1){
+                    this.pageN=this.testQuestion.length-1;
+                };
+                if(this.pageN<0){
+                    this.pageN=0;
+                };
+                this.testQuestion[this.pageN].hidden="block";
+            },
+            nextQuestion:function(){
+                this.testQuestion[this.pageN].hidden="none";
+                this.pageN++;
+                if(this.pageN>this.testQuestion.length-1){
+                    this.pageN=this.testQuestion.length-1;
+                };
+                if(this.pageN<0){
+                    this.pageN=0;
+                };
+                this.testQuestion[this.pageN].hidden="block";
+            },
+            submit: function(event) {
+                //var formData = new FormData(event.target);
+                var formData = JSON.stringify(this.msg);
+                    console.log(formData)
+                this.$http.post('#', formData).then(function(response){
+                    // success callback
+                }, function(response){
+                    // error callback
+                });
+            }
+        }
+
+    });
+</script>
 </body>
 </html>
