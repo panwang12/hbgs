@@ -36,476 +36,59 @@
 <div class="container" id="app1">
     <h2 style="text-align: center">2017年湖北省国税局纳税人满意度专项调查问卷</h2>
     <form @submit.prevent="submit">
-        <div v-for="qs in testQuestion" v-bind:style="{display:qs.hidden}">
-            <h4 >{{qs.title}}</h4>
-            <div v-for="tm in qs.item"  v-if="tm.isRender" v-bind:class="qs.class">
-                <p >{{tm.title}}</p>
-                <div v-for="an in tm.options" :class="tm.class">
-                    <label>
-                        <input v-bind:type="an.type" v-on:click="getScore(an.name,an.value)" v-bind:name="an.name" v-bind:value="an.value">
-                        {{an.score}}
-                    </label>
+        <div>
+            <h4>{{obj.groupTitle}}</h4>
+            <div v-for="pro in obj.problemList" v-if="isShow">
+                <p>{{pro.problemInfoTitle}}</p>
+                <div class="container">
+                    <div v-for="ans in pro.answerOption" v-bind:class="[cls.c1,cls.c2]">
+                        <label>
+                            <input v-on:change="getMsg(ans.id)"  v-bind:type="pro.proType===0?'radio':'checkbox'" v-bind:name="pro.problemInfoID" v-bind:value="ans.id">
+                            {{ans.content}}
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
+        {{msg}}
         <input type="submit" value="提交">
     </form>
-    <div id="pageNum"><button  id="preItem" v-on:click="preQuestion">上一题</button>第 <span>{{pageN+1}}</span>/9题<button v-on:click="nextQuestion('next',$event)" id="nextItem">下一题</button></div>
+    <div id="pageNum"><button  id="preItem">上一题</button>第 <span>{{pageN+1}}</span>/9题<button id="nextItem">下一题</button></div>
 </div>
 <script type="text/javascript" src="js/jquery-1.11.3.js"></script>
 <script type="text/javascript" src="js/bootstrap.js"></script>
 <script type="text/javascript" src="js/vue.js"></script>
 <script type="text/javascript" src="js/vue-resource.js"></script>
 <script>
-    var testQuestion=[
-        {
-            title:"1. 请您对影响办税简便性的几个重要因素进行评价(0分为最低分，5分为最高分):",
-            class:["row"],
-            hidden:"block",
-            item:[
-                {
-                    title:"1-1表单填写简捷",
-                    class:["col-xs-6","col-sm-2"],
-                    isRender:true,
-                    options:[
-                        {name:"q1_t1", value:1, score:"1分",type:"radio"},
-                        {name:"q1_t1", value:2, score:"2分",type:"radio"},
-                        {name:"q1_t1", value:3, score:"3分",type:"radio"},
-                        {name:"q1_t1", value:4, score:"4分",type:"radio"},
-                        {name:"q1_t1", value:5, score:"5分",type:"radio"},
-                        {name:"q1_t1", value:6, score:"不了解",type:"radio"}
-                    ]
-                },
-                {
-                    title: "请问您具体是对哪个表单的简化情况不满意？",
-                    class: ["col-xs-12", "col-sm-4"],
-                    isRender:false,
-                    options: [
-                        {name: "q1_t1_1", value: 1, score: "增值税申报表",type:"radio"},
-                        {name: "q1_t1_1", value: 2, score: "企业所得税申报表",type:"radio"},
-                        {name: "q1_t1_1", value: 3, score: "企业所得税申报表",type:"radio"}
-                    ]
-                },
-                {
-                    title:"1-2资料报送精简",
-                    class:["col-xs-6","col-sm-2"],
-                    isRender:true,
-                    options:[
-                        {name:"q1_t2", value:1, score:"1分",type:"radio"},
-                        {name:"q1_t2", value:2, score:"2分",type:"radio"},
-                        {name:"q1_t2", value:3, score:"3分",type:"radio"},
-                        {name:"q1_t2", value:4, score:"4分",type:"radio"},
-                        {name:"q1_t2", value:5, score:"5分",type:"radio"},
-                        {name:"q1_t2", value:6, score:"不了解",type:"radio"}
-                    ]
-                },
-                {
-                    title:"1-3办税流程简便",
-                    class:["col-xs-6","col-sm-2"],
-                    isRender:true,
-                    options:[
-                        {name:"q1_t3", value:1, score:"1分",type:"radio"},
-                        {name:"q1_t3", value:2, score:"2分",type:"radio"},
-                        {name:"q1_t3", value:3, score:"3分",type:"radio"},
-                        {name:"q1_t3", value:4, score:"4分",type:"radio"},
-                        {name:"q1_t3", value:5, score:"5分",type:"radio"},
-                        {name:"q1_t3", value:6, score:"不了解",type:"radio"}
-                    ]
-                }
-            ]
-        },
-        {
-            title:"2、请您对发票相关工作进行评价(0分为最低分，5分为最高分)：",
-            class:["row"],
-            hidden:"none",
-            item:[
-                {
-                    title:"2-1发票申领",
-                    class:["col-xs-6","col-sm-2"],
-                    isRender:true,
-                    options:[
-                        {name:"q2_t1", value:1, score:"1分",type:"radio"},
-                        {name:"q2_t1", value:2, score:"2分",type:"radio"},
-                        {name:"q2_t1", value:3, score:"3分",type:"radio"},
-                        {name:"q2_t1", value:4, score:"4分",type:"radio"},
-                        {name:"q2_t1", value:5, score:"5分",type:"radio"},
-                        {name:"q2_t1", value:6, score:"不了解",type:"radio"}
-                    ]
-                },
-                {
-                    title:"2-2发票增版增量",
-                    class:["col-xs-6","col-sm-2"],
-                    isRender:true,
-                    options:[
-                        {name:"q2_t2", value:1, score:"1分",type:"radio"},
-                        {name:"q2_t2", value:2, score:"2分",type:"radio"},
-                        {name:"q2_t2", value:3, score:"3分",type:"radio"},
-                        {name:"q2_t2", value:4, score:"4分",type:"radio"},
-                        {name:"q2_t2", value:5, score:"5分",type:"radio"},
-                        {name:"q2_t2", value:6, score:"不了解",type:"radio"}
-                    ]
-                },
-                {
-                    title:"2-3代开发票简便",
-                    class:["col-xs-6","col-sm-2"],
-                    isRender:true,
-                    options:[
-                        {name:"q2_t3", value:1, score:"1分",type:"radio"},
-                        {name:"q2_t3", value:2, score:"2分",type:"radio"},
-                        {name:"q2_t3", value:3, score:"3分",type:"radio"},
-                        {name:"q2_t3", value:4, score:"4分",type:"radio"},
-                        {name:"q2_t3", value:5, score:"5分",type:"radio"},
-                        {name:"q2_t3", value:6, score:"不了解",type:"radio"}
-                    ]
-                }
-            ]
-        },
-        {
-            title:"3、请您对税收政策宣传相关工作进行评价(0分为最低分，5分为最高分):",
-            class:["row"],
-            hidden:"none",
-            item:[
-                {
-                    title:"3-1渠道多样",
-                    class:["col-xs-6","col-sm-2"],
-                    isRender:true,
-                    options:[
-                        {name:"q3_t1", value:1, score:"1分",type:"radio"},
-                        {name:"q3_t1", value:2, score:"2分",type:"radio"},
-                        {name:"q3_t1", value:3, score:"3分",type:"radio"},
-                        {name:"q3_t1", value:4, score:"4分",type:"radio"},
-                        {name:"q3_t1", value:5, score:"5分",type:"radio"},
-                        {name:"q3_t1", value:6, score:"不了解",type:"radio"}
-                    ]
-                },
-                {
-                    title:"3-2宣传及时",
-                    class:["col-xs-6","col-sm-2"],
-                    isRender:true,
-                    options:[
-                        {name:"q3_t2", value:1, score:"1分",type:"radio"},
-                        {name:"q3_t2", value:2, score:"2分",type:"radio"},
-                        {name:"q3_t2", value:3, score:"3分",type:"radio"},
-                        {name:"q3_t2", value:4, score:"4分",type:"radio"},
-                        {name:"q3_t2", value:5, score:"5分",type:"radio"},
-                        {name:"q3_t2", value:6, score:"不了解",type:"radio"}
-                    ]
-                },
-                {
-                    title:"3-3解读清晰",
-                    class:["col-xs-6","col-sm-2"],
-                    isRender:true,
-                    options:[
-                        {name:"q3_t3", value:1, score:"1分",type:"radio"},
-                        {name:"q3_t3", value:2, score:"2分",type:"radio"},
-                        {name:"q3_t3", value:3, score:"3分",type:"radio"},
-                        {name:"q3_t3", value:4, score:"4分",type:"radio"},
-                        {name:"q3_t3", value:5, score:"5分",type:"radio"},
-                        {name:"q3_t3", value:6, score:"不了解",type:"radio"}
-                    ]
-                }
-            ]
-        },
-        {
-            title:"4、请您对网上申报软件进行评价(0分为最低分，5分为最高分):",
-            class:["row"],
-            hidden:"none",
-            item:[
-                {
-                    title:"4-1操作便捷",
-                    class:["col-xs-6","col-sm-2"],
-                    isRender:true,
-                    options:[
-                        {name:"q4_t1", value:1, score:"1分",type:"radio"},
-                        {name:"q4_t1", value:2, score:"2分",type:"radio"},
-                        {name:"q4_t1", value:3, score:"3分",type:"radio"},
-                        {name:"q4_t1", value:4, score:"4分",type:"radio"},
-                        {name:"q4_t1", value:5, score:"5分",type:"radio"},
-                        {name:"q4_t1", value:6, score:"不了解",type:"radio"}
-                    ]
-                },
-                {
-                    title:"4-2操作便捷",
-                    class:["col-xs-6","col-sm-2"],
-                    isRender:true,
-                    options:[
-                        {name:"q4_t2", value:1, score:"1分",type:"radio"},
-                        {name:"q4_t2", value:2, score:"2分",type:"radio"},
-                        {name:"q4_t2", value:3, score:"3分",type:"radio"},
-                        {name:"q4_t2", value:4, score:"4分",type:"radio"},
-                        {name:"q4_t2", value:5, score:"5分",type:"radio"},
-                        {name:"q4_t2", value:6, score:"不了解",type:"radio"}
-                    ]
-                },
-                {
-                    title:"4-3维护及时",
-                    class:["col-xs-6","col-sm-2"],
-                    isRender:true,
-                    options:[
-                        {name:"q4_t3", value:1, score:"1分",type:"radio"},
-                        {name:"q4_t3", value:2, score:"2分",type:"radio"},
-                        {name:"q4_t3", value:3, score:"3分",type:"radio"},
-                        {name:"q4_t3", value:4, score:"4分",type:"radio"},
-                        {name:"q4_t3", value:5, score:"5分",type:"radio"},
-                        {name:"q4_t3", value:6, score:"不了解",type:"radio"}
-                    ]
-                }
-            ]
-        },
-        {
-            title:"5、请问您使用的是什么开票软件？",
-            class:["row"],
-            hidden:"none",
-            item:[
-                {
-                    title:"",
-                    class:["col-xs-12","col-sm-6"],
-                    isRender:true,
-                    options:[
-                        {name:"q5_t1", value:"增值税发票新系统", score:"增值税发票新系统",type:"checkbox"},
-                        {name:"q5_t1", value:"其他开票软件", score:"其他开票软件",type:"checkbox"},
-                        {name:"q5_t1", value:"上述两类软件都用", score:"上述两类软件都用",type:"checkbox"},
-                        {name:"q5_t1", value:"没用过开票软件", score:"没用过开票软件",type:"checkbox"}
-                    ]
-                },
-                {
-                    title: "请对您使用的发票开票软件进行评价(0分为最低分，5分为最高分)：",
-                    class: ["col-xs-12", "col-sm-4"],
-                    isRender:false,
-                    options: [
-                        {name: "q5_t2", value: 1, score: "操作便捷",type:"radio"},
-                        {name: "q5_t2", value: 2, score: "运行稳定",type:"radio"},
-                        {name: "q5_t2", value: 3, score: "维护及时",type:"radio"}
-                    ]
-                },
-            ]
-        },
-        {
-            title:"6、请您对办税服务厅服务进行评价(0分为最低分，5分为最高分):",
-            class:["row"],
-            hidden:"none",
-            item:[
-                {
-                    title:"6-1导税咨询",
-                    class:["col-xs-6","col-sm-2"],
-                    isRender:true,
-                    options:[
-                        {name:"q6_t1", value:1, score:"1分",type:"radio"},
-                        {name:"q6_t1", value:2, score:"2分",type:"radio"},
-                        {name:"q6_t1", value:3, score:"3分",type:"radio"},
-                        {name:"q6_t1", value:4, score:"4分",type:"radio"},
-                        {name:"q6_t1", value:5, score:"5分",type:"radio"},
-                        {name:"q6_t1", value:6, score:"不了解",type:"radio"}
-                    ]
-                },
-                {
-                    title:"6-2业务熟练",
-                    class:["col-xs-6","col-sm-2"],
-                    isRender:true,
-                    options:[
-                        {name:"q6_t2", value:1, score:"1分",type:"radio"},
-                        {name:"q6_t2", value:2, score:"2分",type:"radio"},
-                        {name:"q6_t2", value:3, score:"3分",type:"radio"},
-                        {name:"q6_t2", value:4, score:"4分",type:"radio"},
-                        {name:"q6_t2", value:5, score:"5分",type:"radio"},
-                        {name:"q6_t2", value:6, score:"不了解",type:"radio"}
-                    ]
-                },
-                {
-                    title:"6-3服务态度",
-                    class:["col-xs-6","col-sm-2"],
-                    isRender:true,
-                    options:[
-                        {name:"q6_t3", value:1, score:"1分",type:"radio"},
-                        {name:"q6_t3", value:2, score:"2分",type:"radio"},
-                        {name:"q6_t3", value:3, score:"3分",type:"radio"},
-                        {name:"q6_t3", value:4, score:"4分",type:"radio"},
-                        {name:"q6_t3", value:5, score:"5分",type:"radio"},
-                        {name:"q6_t3", value:6, score:"不了解",type:"radio"}
-                    ]
-                }
-            ]
-        },
-        {
-            title:"7.最后请问您是企业的（单选）：",
-            class:["row"],
-            hidden:"none",
-            item:[
-                {
-                    title:"",
-                    class:["col-xs-12","col-sm-6"],
-                    isRender:true,
-                    options:[
-                        {name:"q7_t1", value:"专职财务负责人", score:"专职财务负责人",type:"radio"},
-                        {name:"q7_t1", value:"兼职财务负责人(代办人员)", score:"兼职财务负责人(代办人员)",type:"radio"},
-                        {name:"q7_t1", value:"办税人员", score:"办税人员",type:"radio"},
-                        {name:"q7_t1", value:"法人", score:"法人",type:"radio"},
-                        {name:"q7_t1", value:"其他(工作人员)", score:"其他(工作人员)",type:"radio"}
-                    ]
-                }
-            ]
-        },
-        {
-            title:"8.行业类型（单选）",
-            class:["row"],
-            hidden:"none",
-            item:[
-                {
-                    title:"",
-                    class:["col-xs-12","col-sm-6"],
-                    isRender:true,
-                    options:[
-                        {name:"q8_t1", value:"制造业", score:"制造业",type:"radio"},
-                        {name:"q8_t1", value:"租赁和商务服务业", score:"租赁和商务服务业",type:"radio"},
-                        {name:"q8_t1", value:"批发和零售业", score:"批发和零售业",type:"radio"},
-                        {name:"q8_t1", value:"居民服务、修理和其他服务业", score:"居民服务、修理和其他服务业",type:"radio"},
-                        {name:"q8_t1", value:"农、林、牧、渔业", score:"农、林、牧、渔业",type:"radio"},
-                        {name:"q8_t1", value:"交通运输、仓储和邮政业", score:"交通运输、仓储和邮政业",type:"radio"},
-                        {name:"q8_t1", value:"文化、体育和娱乐业", score:"文化、体育和娱乐业",type:"radio"},
-                        {name:"q8_t1", value:"采矿业", score:"采矿业",type:"radio"},
-                        {name:"q8_t1", value:"建筑业", score:"建筑业",type:"radio"},
-                        {name:"q8_t1", value:"卫生和社会工作", score:"卫生和社会工作",type:"radio"},
-                        {name:"q8_t1", value:"水利、环境和公共设施管理业", score:"水利、环境和公共设施管理业",type:"radio"},
-                        {name:"q8_t1", value:"电力、燃气及水的生产和供应业", score:"电力、燃气及水的生产和供应业",type:"radio"},
-                        {name:"q8_t1", value:"金融业", score:"金融业",type:"radio"},
-                        {name:"q8_t1", value:"科学研究、技术服务业", score:"科学研究、技术服务业",type:"radio"},
-                        {name:"q8_t1", value:"信息传输、软件和信息技术服务业", score:"信息传输、软件和信息技术服务业",type:"radio"},
-                        {name:"q8_t1", value:"教育", score:"教育",type:"radio"},
-                        {name:"q8_t1", value:"住宿和餐饮业", score:"住宿和餐饮业",type:"radio"},
-                        {name:"q8_t1", value:"房地产业", score:"房地产业",type:"radio"},
-                        {name:"q8_t1", value:"公共管理、社会保障和社会组织", score:"公共管理、社会保障和社会组织",type:"radio"},
-                        {name:"q8_t1", value:"国际组织", score:"国际组织",type:"radio"},
-                        {name:"q8_t1", value:"税务管理特定行业", score:"税务管理特定行业",type:"radio"},
-                    ]
-                }
-            ]
-        },
-        {
-            title:"9、企业类型（多选）：",
-            class:["row"],
-            hidden:"none",
-            item:[
-                {
-                    title:"5-1、请问您使用的是什么开票软件？",
-                    class:["col-xs-12","col-sm-6"],
-                    isRender:true,
-                    options:[
-                        {name:"q9_t1", value:"一般纳税人", score:"一般纳税人",type:"checkbox"},
-                        {name:"q9_t1", value:"小规模纳税人", score:"小规模纳税人",type:"checkbox"},
-                        {name:"q9_t1", value:"企业所得税", score:"企业所得税",type:"checkbox"},
-                        {name:"q9_t1", value:"中小企业", score:"中小企业",type:"checkbox"},
-                        {name:"q9_t1", value:"营改增企业", score:"营改增企业",type:"checkbox"},
-                        {name:"q9_t1", value:"个体", score:"个体",type:"checkbox"}
-                    ]
-                }
-            ]
-        },
-    ]
-    var app1=new Vue({
+
+    var app=new Vue({
         el:"#app1",
         data:{
-            msg:{
-                q1_t1:"",
-                q1_t1_1:"",
-                q1_t2:"",
-                q1_t3:"",
-                q2_t1:"",
-                q2_t2:"",
-                q2_t3:"",
-                q3_t1:"",
-                q3_t2:"",
-                q3_t3:"",
-                q4_t1:"",
-                q4_t2:"",
-                q4_t3:"",
-                q5_t1:[],
-                q5_t2:"",
-                q6_t1:"",
-                q6_t2:"",
-                q6_t3:"",
-                q7_t1:"",
-                q8_t1:"",
-                q9_t1:[]
-            },
             pageN:0,
-            testQuestion:testQuestion
+            obj:{},//测试题内容
+            cls:{},//控制选项的class
+            isShow:true,//显示和隐藏
+            msg:{}//装载问题答案
         },
         methods:{
-            getScore:function(name,score){
-                if(name==="q1_t1"){
-                    if(score<3){
-                        this.testQuestion[0].item[1].isRender=true;
-                    }else{
-                        this.testQuestion[0].item[1].isRender=false;
-                    }
-                };
-                if((typeof this.msg[name])==="object"){
-                    this.msg[name]=[];
-                    var ele=document.getElementsByName(name);
-                    if(name==="q5_t1"){
-                        this.testQuestion[4].item[1].isRender=false;
-                        for(var i=0;i<ele.length;i++){
-                            if(ele[i].checked===true){
-                                this.msg[name].push(ele[i].value);
-                                if(ele[i].value!=="没用过开票软件"){
-                                    this.testQuestion[4].item[1].isRender=true;
-                                }
-                            };
-                        }
-                    };
-                    if(name==="q9_t1"){
-                        for(var i=0;i<ele.length;i++){
-                            if(ele[i].checked===true){
-                                this.msg[name].push(ele[i].value);
-                            };
-                        }
-                    }
-                }else{
-                    this.msg[name]=score;
-                }
-            },
-            preQuestion:function(){
-                this.testQuestion[this.pageN].hidden="none";
-                this.pageN--;
-                if(this.pageN>this.testQuestion.length-1){
-                    this.pageN=this.testQuestion.length-1;
-                };
-                if(this.pageN<0){
-                    this.pageN=0;
-                };
-                this.testQuestion[this.pageN].hidden="block";
-                /*for(var k in this.msg){
-                    if(this.msg[k]===""){
-                        console.log("还要填写")
-                    }else{
-                        console.log(this.msg[k])
-                    }
-                }*/
-            },
-            nextQuestion:function(){
-                this.testQuestion[this.pageN].hidden="none";
-                this.pageN++;
-                if(this.pageN>this.testQuestion.length-1){
-                    this.pageN=this.testQuestion.length-1;
-                };
-                if(this.pageN<0){
-                    this.pageN=0;
-                };
-                this.testQuestion[this.pageN].hidden="block";
-            },
-            submit: function(event){
-                //var formData = new FormData(event.target);
-                var formData = JSON.stringify(this.msg);
-                    console.log(formData)
-                this.$http.post('#', formData).then(function(response){
-                    // success callback
-                }, function(response){
-                    // error callback
-                });
+            getMsg:function(q){
+                this.obj.problemList[1].isShow=1
             }
         }
-
     });
+    var url="http://hbgs12366.dfinfo.cn/api/Values/GetAnswerByID";
+    app.$http.post(url,{groupID: 0}).then(function(data){
+        app.obj=data.body;
+        console.log(app.obj);
+        for(var i=0;i<app.obj.problemList.length;i++){
+            this.msg[app.obj.problemList[i].problemInfoID]="";
+        }
+        if(app.obj.problemList[0].proType===0){//单选类型
+            app.cls={c1:"col-xs-6",c2:"col-sm-3"}
+        };
+    },function(response){
+        console.log(response+"请求错误");
+    })
 </script>
 </body>
 </html>
