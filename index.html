@@ -30,21 +30,24 @@
             padding: 10px;
             text-align: center;
         }
+        .choose p{
+            color:#f00;
+        }
     </style>
 </head>
 <body>
-<div class="container" id="app">
+<!--<div class="container" id="app">
     <h2 style="text-align: center">2017年湖北省国税局纳税人满意度专项调查问卷</h2>
     <form @submit.prevent="submit">
         <div>
-            <h4>{{obj.groupTitle}}</h4>
-            <div v-for="(pro,k) in obj.problemList"  v-if="isShow[k]===0?true:false">
+            <h4>{{obj[0].groupTitle}}</h4>
+            <div v-for="(pro,k) in obj[0].problemList"  v-if="isShow[k]===0?true:false" v-bind:class="{notice:isChecked}">
                 <p>{{pro.problemInfoTitle}}</p>
                 <div class="container">
                     <div v-for="an in pro.answerOption" v-bind:class="[cls.c1,cls.c2]">
                         <label>
                             <input v-on:change="getMsg(k,pro.problemInfoID,an.id)"  v-bind:type="pro.proType===0?'radio':'checkbox'" v-bind:name="pro.problemInfoID" v-bind:value="an.id">
-                            {{ans.content}}
+                            {{an.content}}
                         </label>
                     </div>
                 </div>
@@ -52,11 +55,30 @@
         </div>
         <input type="submit" value="提交">
     </form>
-    {{ans.model}}
-    {{msg.model}}
+    <div id="pageNum"><button  id="preItem" v-on:click="pre()">上一题</button>第 <span>{{pageN+1}}</span>/{{pageEnd+1}}<button id="nextItem" v-on:click="next()">下一题</button></div>
+</div>-->
+<div class="container" id="app">
+    <h2 style="text-align: center">2017年湖北省国税局纳税人满意度专项调查问卷</h2>
+    <form @submit.prevent="submit">
+        <div>
+            <h4>{{obj[pageN].groupTitle}}</h4>
+            <div v-for="(pro,k) in obj[pageN].problemList"  v-if="pro.isShow===0?true:false" v-bind:class="{choose:pro.isChoose}">
+                <p>{{pro.problemInfoTitle}}</p>
+                <div class="container">
+                    <div v-for="(an,i) in pro.answerOption" v-bind:class="{'col-xs-6':pro.proType===0,'col-sm-2':pro.proType===0}">
+                        <label>
+                            <input :checked="an.isChecked"  v-on:change="getMsg(pageN,k,pro.problemInfoID,an.id,i)"  v-bind:type="pro.proType===0?'radio':'checkbox'" v-bind:name="pro.problemInfoID" v-bind:value="an.id">
+                            {{an.content}}
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{msg.model}}
+        <input v-if="subButton" type="submit" value="提交">
+    </form>
     <div id="pageNum"><button  id="preItem" v-on:click="pre()">上一题</button>第 <span>{{pageN+1}}</span>/{{pageEnd+1}}<button id="nextItem" v-on:click="next()">下一题</button></div>
 </div>
-
 <script type="text/javascript" src="js/jquery-1.11.3.js"></script>
 <script type="text/javascript" src="js/bootstrap.js"></script>
 <script type="text/javascript" src="js/vue.js"></script>
@@ -68,13 +90,8 @@
         data:{
             pageN:0,//记录题组及页面
             pageEnd:9,//最后一题题组
-            obj:{},//测试题内容
-            cls:{},//控制选项的class
-            isShow:[],//显示和隐藏
-            ans:{//记录当前题组问题及答案
-                groupId:"",//题组id
-                model:[]//本题组小题内容id和answer
-            },
+            subButton:false,
+            obj:[],//测试题内容
             msg:{//提交的数据
                 model: [//盛放题组的容器
                 ],
@@ -84,58 +101,126 @@
             }
         },
         mounted:function(){
-            this.add(0);//加载第一页面
-            this.msg.model=new Array(10)//初始化题组数
+                this.add(0);//加载第一页面
         },
         methods:{
-            before:function(){
-                this.msg.model[this.pageN]=this.ans.model;//把本页问题答案放在题组容器
-                this.ans.model=[];//本页题组为空数组
-                this.isShow=[];//状态盛放显示数组
-            },
-            pre:function(){
-                this.before();
-                this.pageN--;//页面减一
+
+            pre:function(){//向前翻页
+                this.pageN--;
                 this.pageN=this.pageN<0?0:this.pageN;
-                this.add(this.pageN)//调用添加页面
+                this.add(this.pageN)
             },
-            next:function(){
-                this.before();
+            next:function(){//向后翻页
                 this.pageN++;
                 this.pageN=this.pageN>this.pageEnd?this.pageEnd:this.pageN;
                 this.add(this.pageN)
             },
-            add:function(groupId){
+            add:function(groupId){//页面渲染
                 var url="http://hbgs12366.dfinfo.cn/api/Values/GetAnswerByID";
-                this.$http.post(url,{groupID:groupId}).then(function(data){
-                    this.obj=data.body;//把请求数据赋值给本地
-                    console.log(this.obj);
-                    //遍历请求题组
-                    for(var i=0;i<this.obj.problemList.length;i++){
-                        this.ans.model[i]="";//根据题的数量生成容器
-                        this.isShow[i]=this.obj.problemList[i].isShow;//根据题的状态生成容器
-                    };
-                    if(this.obj.problemList[0].proType===0){//单选类型
-                        this.cls={c1:"col-xs-6",c2:"col-sm-3"}
-                    };
-                },function(response){
-                    console.log(response+"请求错误");
+                if(this.obj.length<=this.pageN) {
+                    this.$http.post(url, {groupID: groupId}).then(function (data) {
+                        Vue.set(this.obj, groupId, data.body);//把请求数据存储本地
+                        this.obj[groupId].problemList.forEach(function(v,k){
+                            v.answerOption.forEach(function(v1,k1){
+                                Vue.set(v1,'isChecked',false);
+                            })
+                        })
+                        console.log(this.obj);
+                    },function(response){
+                        console.log(response+"请求错误");
+                    })
+                }
+                //控制提交按钮显示隐藏
+                if(this.pageN===this.pageEnd){
+                    this.subButton=true;
+                }else{
+                    this.subButton=false;
+                }
+            },
+            getMsg:function(pageN,key,name,val,index){
+                //pageN组 key题 name名称 val值 index选项
+                //更改选择状态
+                if(this.obj[pageN].problemList[key].proType===0){//单选
+                    this.obj[pageN].problemList[key].answerOption.forEach(function(v,k){
+                        v.isChecked=false;
+                    });
+                    this.obj[pageN].problemList[key].answerOption[index].isChecked=true;
+                }else if(this.obj[pageN].problemList[key].proType===1){//多选
+                    this.obj[pageN].problemList[key].answerOption[index].isChecked=!this.obj[pageN].problemList[key].answerOption[index].isChecked;
+                }
+                //答题的跳转逻辑
+                var ruleList=this.obj[pageN].ruleList;
+                var problemInfoID=this.obj[pageN].problemList[key].problemInfoID;
+                var that=this;
+                ruleList.forEach(function(v,k){
+                    //v.answerOptionInfoNo=3;
+                    that.obj[pageN].problemList.forEach(function(v1,k1){
+                        if(v1.problemInfoID.toString()===v.redirectID){
+                            if(val<3){
+                                v1.isShow=0;
+                            }else{
+                                v1.isShow=1;
+                            }
+                        }
+                    })
                 })
             },
-            getMsg:function(k,n,v){
-                //把题目答案赋给状态的
-                Vue.set(this.ans.model,k,{problemID:n,answerID:v});
-                /*if(this.ans.model[0].answerID<3){
-                    Vue.set(this.isShow,1,0);
-                }else{
-                    Vue.set(this.isShow,1,1);
-                    Vue.set(this.ans.model,1,"");
-                }*/
+            submit:function(){
+                this.msg.model=[];
+                var arr=[];
+                var that=this;
+                this.obj.forEach(function(v,k){
+                    arr[k]=[];//一个题组
+                    v.problemList.forEach(function(v1,k1){
+                        arr[k][k1]={};//一个小题
+                        arr[k][k1].problemID=v1.problemInfoID;//小题的编号 唯一
+                        if(v1.proType===0){//单选
+                            v1.answerOption.forEach(function(v2,k2){
+                                if(v2.isChecked){
+                                    arr[k][k1].answerID=v2.id;
+                                }
+                            })
+                        }else if(v1.proType===1){//多选
+                            arr[k][k1].answerID=[]
+                            v1.answerOption.forEach(function(v2,k2){
+                                if(v2.isChecked){
+                                    arr[k][k1].answerID.push(v2.id);
+                                }
+                            })
+                        }
+                        //判断是否可以提交
+                        if(typeof arr[k][k1].answerID==="undefined"){//单选未选择
+                                Vue.set(v1,"isChoose",true)
+                        }else if(typeof arr[k][k1].answerID==="object"){//多选
+                            if(arr[k][k1].answerID.length===0){//未选择
+                                Vue.set(v1,"isChoose",true)
+                            }else {
+                                Vue.set(v1, "isChoose", false)//选择
+                            }
+                        }else{//单选选择
+                            Vue.set(v1,"isChoose",false)
+                        }
+                    });
+                    that.msg.model=that.msg.model.concat(arr[k])
+                });
+                console.log(this.msg.model);
+                console.log(this.checkedSubmit())
+                var url="#";
+                this.$http.post(url,this.msg).then(function(data){
+                    //console.log(data)
+                })
             },
-            watch:function(){
-
+            checkedSubmit:function(){
+                for(var i=0;i<this.obj.length;i++){
+                    for(var j=0;j<this.obj[i].problemList.length;j++){
+                        if(this.obj[i].problemList[j].isChoose===true){
+                            return false;
+                        }else{
+                            return true;
+                        }
+                    }
+                }
             }
-
         }
     });
 
