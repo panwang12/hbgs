@@ -62,7 +62,7 @@
     <form @submit.prevent="submit">
         <div>
             <h4>{{obj[pageN].groupTitle}}</h4>
-            <div v-for="(pro,k) in obj[pageN].problemList"  v-if="pro.isShow===0?true:false" v-bind:class="{choose:pro.isChoose}">
+            <div v-for="(pro,k) in obj[pageN].problemList"  v-if="pro.isShow===0?true:false" v-bind:class="{choose:pro.unChoose}">
                 <p>{{pro.problemInfoTitle}}</p>
                 <div class="container">
                     <div v-for="(an,i) in pro.answerOption" v-bind:class="{'col-xs-6':pro.proType===0,'col-sm-2':pro.proType===0}">
@@ -104,7 +104,6 @@
                 this.add(0);//加载第一页面
         },
         methods:{
-
             pre:function(){//向前翻页
                 this.pageN--;
                 this.pageN=this.pageN<0?0:this.pageN;
@@ -149,9 +148,28 @@
                     this.obj[pageN].problemList[key].answerOption[index].isChecked=!this.obj[pageN].problemList[key].answerOption[index].isChecked;
                 }
                 //答题的跳转逻辑
-                var ruleList=this.obj[pageN].ruleList;
-                var problemInfoID=this.obj[pageN].problemList[key].problemInfoID;
                 var that=this;
+                var ruleList=this.obj[pageN].ruleList;
+                console.log(pageN+";"+key+";"+name+";"+val+";"+index)
+                if(ruleList.length!==0){
+                    ruleList.forEach(function(v,k){//遍历规则组
+                        if(parseInt(v.problemInfoID)===name){//对比当前规则问题id匹配输入问题id
+                            var target=parseInt(v.redirectID);//拿到目标id
+                            that.obj[pageN].problemList.forEach(function(v1,k1){//遍历当前题组
+                                if(v1.problemInfoID===target){//匹配与目标id相同的问题id
+                                    if(parseInt(v.answerOptionInfoNo)===val){//规则值匹配输入值
+                                        v1.isShow=0;
+                                    }else{
+                                        console.log("dsaf")
+                                        v1.isShow=1;
+                                    }
+                                }
+                            })
+                        }
+                    })
+                }
+
+               /* var that=this;
                 ruleList.forEach(function(v,k){
                     //v.answerOptionInfoNo=3;
                     that.obj[pageN].problemList.forEach(function(v1,k1){
@@ -163,9 +181,10 @@
                             }
                         }
                     })
-                })
+                })*/
             },
             submit:function(){
+                //将obj内的数据添加给提交数组msg
                 this.msg.model=[];
                 var arr=[];
                 var that=this;
@@ -188,38 +207,40 @@
                                 }
                             })
                         }
-                        //判断是否可以提交
+                        //添加选择状态（是否选择）
                         if(typeof arr[k][k1].answerID==="undefined"){//单选未选择
-                                Vue.set(v1,"isChoose",true)
+                                Vue.set(v1,"unChoose",true)
                         }else if(typeof arr[k][k1].answerID==="object"){//多选
                             if(arr[k][k1].answerID.length===0){//未选择
-                                Vue.set(v1,"isChoose",true)
+                                Vue.set(v1,"unChoose",true)
                             }else {
-                                Vue.set(v1, "isChoose", false)//选择
+                                Vue.set(v1, "unChoose", false)//选择
                             }
                         }else{//单选选择
-                            Vue.set(v1,"isChoose",false)
+                            Vue.set(v1,"unChoose",false)
                         }
                     });
                     that.msg.model=that.msg.model.concat(arr[k])
                 });
-                console.log(this.msg.model);
-                console.log(this.checkedSubmit())
+                //提交答题
                 var url="#";
-                this.$http.post(url,this.msg).then(function(data){
-                    //console.log(data)
-                })
+                if(this.checkedSubmit()){
+                    this.$http.post(url,this.msg).then(function(data){
+                        //console.log(data)
+                    })
+                }else{
+                    alert("未完成答题")
+                }
             },
             checkedSubmit:function(){
                 for(var i=0;i<this.obj.length;i++){
                     for(var j=0;j<this.obj[i].problemList.length;j++){
-                        if(this.obj[i].problemList[j].isChoose===true){
+                        if(this.obj[i].problemList[j].unChoose===true){
                             return false;
-                        }else{
-                            return true;
                         }
                     }
                 }
+                return true;
             }
         }
     });
