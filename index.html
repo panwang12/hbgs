@@ -150,38 +150,37 @@
                 //答题的跳转逻辑
                 var that=this;
                 var ruleList=this.obj[pageN].ruleList;
-                console.log(pageN+";"+key+";"+name+";"+val+";"+index)
+                console.log(pageN+";"+key+";"+name+";"+val+";"+index);
                 if(ruleList.length!==0){
-                    ruleList.forEach(function(v,k){//遍历规则组
-                        if(parseInt(v.problemInfoID)===name){//对比当前规则问题id匹配输入问题id
-                            var target=parseInt(v.redirectID);//拿到目标id
-                            that.obj[pageN].problemList.forEach(function(v1,k1){//遍历当前题组
-                                if(v1.problemInfoID===target){//匹配与目标id相同的问题id
-                                    if(parseInt(v.answerOptionInfoNo)===val){//规则值匹配输入值
-                                        v1.isShow=0;
-                                    }else{
-                                        console.log("dsaf")
-                                        v1.isShow=1;
+                    for(var i=0;i<ruleList.length;i++){
+                        var targetProblemInfoID=parseInt(ruleList[i].problemInfoID);
+                        var redirectID=parseInt(ruleList[i].redirectID);
+                        var answerOptionInfoNo=parseInt(ruleList[i].answerOptionInfoNo);
+                        //和当前题组做比对
+                        //第一种类型的跳转 单选本页跳转
+                        if(parseInt(ruleList[i].redirectType)===0){
+                            if(targetProblemInfoID===name){
+                                for(var j=0;j<that.obj[pageN].problemList.length;j++){
+                                    if(that.obj[pageN].problemList[j].problemInfoID===redirectID){
+                                        if(answerOptionInfoNo===val){
+                                            that.obj[pageN].problemList[j].isShow=0;
+                                            return;
+                                        }else{
+                                            that.obj[pageN].problemList[j].isShow=1;
+                                        }
                                     }
                                 }
-                            })
-                        }
-                    })
-                }
+                            }
+                        };
+                        //第二种类型的跳转 多选它页跳转
+                        if(parseInt(ruleList[i].redirectType)===1){
+                            if(targetProblemInfoID===name){
 
-               /* var that=this;
-                ruleList.forEach(function(v,k){
-                    //v.answerOptionInfoNo=3;
-                    that.obj[pageN].problemList.forEach(function(v1,k1){
-                        if(v1.problemInfoID.toString()===v.redirectID){
-                            if(val<3){
-                                v1.isShow=0;
-                            }else{
-                                v1.isShow=1;
                             }
                         }
-                    })
-                })*/
+                    }
+                }
+
             },
             submit:function(){
                 //将obj内的数据添加给提交数组msg
