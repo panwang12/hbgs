@@ -153,9 +153,10 @@
                 console.log(pageN+";"+key+";"+name+";"+val+";"+index);
                 if(ruleList.length!==0){
                     for(var i=0;i<ruleList.length;i++){
-                        var targetProblemInfoID=parseInt(ruleList[i].problemInfoID);
-                        var redirectID=parseInt(ruleList[i].redirectID);
-                        var answerOptionInfoNo=parseInt(ruleList[i].answerOptionInfoNo);
+                        var targetProblemInfoID=parseInt(ruleList[i].problemInfoID);//匹配问题id
+                        var redirectID=parseInt(ruleList[i].redirectID);//跳转问题id
+                        var answerOptionInfoNo=parseInt(ruleList[i].answerOptionInfoNo);//答案
+                        var sortIndex=parseInt(ruleList[i].sortIndex);//排序优先级
                         //和当前题组做比对
                         //第一种类型的跳转 单选本页跳转
                         if(parseInt(ruleList[i].redirectType)===0){
@@ -175,7 +176,19 @@
                         //第二种类型的跳转 多选它页跳转
                         if(parseInt(ruleList[i].redirectType)===1){
                             if(targetProblemInfoID===name){
-
+                                var mulAns;
+                                for(var m=0;m<that.obj[pageN].problemList.length;m++){
+                                    if(that.obj[pageN].problemList[m].problemInfoID===targetProblemInfoID){
+                                        for(var n=0;n<that.obj[pageN].problemList[m].answerOption.length;n++){
+                                            if(that.obj[pageN].problemList[m].answerOption[n].isChecked===true){
+                                                mulAns=that.obj[pageN].problemList[m].answerOption[n].id;
+                                            }
+                                        };
+                                    }
+                                };
+                               /* if(mulAns===4){
+                                    this.pageN=7
+                                }*/
                             }
                         }
                     }

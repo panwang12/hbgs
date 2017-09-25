@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="d982ebeb-1c9b-4794-9921-83fe3e3b2235" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/index.html" afterPath="$PROJECT_DIR$/index.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="hbgs.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -27,8 +26,8 @@
       <file leaf-file-name="index.html" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.5263158">
-              <caret line="190" column="32" selection-start-line="190" selection-start-column="32" selection-end-line="190" selection-end-column="32" />
+            <state vertical-scroll-proportion="0.47894737">
+              <caret line="188" column="33" selection-start-line="188" selection-start-column="31" selection-end-line="190" selection-end-column="35" />
               <folding>
                 <element signature="e#822#1932#0" expanded="false" />
                 <element signature="n#style#0;n#h2#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -715,8 +714,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/index.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5263158">
-          <caret line="190" column="32" selection-start-line="190" selection-start-column="32" selection-end-line="190" selection-end-column="32" />
+        <state vertical-scroll-proportion="0.47894737">
+          <caret line="188" column="33" selection-start-line="188" selection-start-column="31" selection-end-line="190" selection-end-column="35" />
           <folding>
             <element signature="e#822#1932#0" expanded="false" />
             <element signature="n#style#0;n#h2#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
