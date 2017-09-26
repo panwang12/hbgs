@@ -74,7 +74,6 @@
                 </div>
             </div>
         </div>
-        {{msg.model}}
         <input v-if="subButton" type="submit" value="提交">
     </form>
     <div id="pageNum"><button  id="preItem" v-on:click="pre()">上一题</button>第 <span>{{pageN+1}}</span>/{{pageEnd+1}}<button id="nextItem" v-on:click="next()">下一题</button></div>
@@ -84,23 +83,40 @@
 <script type="text/javascript" src="js/vue.js"></script>
 <script type="text/javascript" src="js/vue-resource.js"></script>
 <script>
-
+    function IsPC(){
+        var userAgentInfo = navigator.userAgent;
+        var Agents = new Array("Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod");
+        var flag = true;
+        for (var v = 0; v < Agents.length; v++) {
+            if (userAgentInfo.indexOf(Agents[v]) > 0) {
+                flag ="phone";
+                break;
+            }else{
+                flag ="url"
+            }
+        }
+        return flag;
+    }
     var app1=new Vue({
         el:"#app",
         data:{
             pageN:0,//记录题组及页面
             pageEnd:9,//最后一题题组
             subButton:false,
-            obj:[],//测试题内容
+            obj:[{}],//测试题内容
             msg:{//提交的数据
                 model: [//盛放题组的容器
                 ],
                 sourceType:"",
-                sourceDetail: "",
-                taxAuthCode: ""
+                sourceDetail: "string",
+                taxAuthCode: "string"
             }
         },
         mounted:function(){
+                this.obj=new Array(10);
+                for(var i=0;i<this.obj.length;i++){
+                    this.obj[i]={};
+                }
                 this.add(0);//加载第一页面
         },
         methods:{
@@ -116,15 +132,15 @@
             },
             add:function(groupId){//页面渲染
                 var url="http://hbgs12366.dfinfo.cn/api/Values/GetAnswerByID";
-                if(this.obj.length<=this.pageN) {
-                    this.$http.post(url, {groupID: groupId}).then(function (data) {
+                var newGroupId=groupId+1;
+                if(this.obj[groupId].groupID===undefined) {
+                    this.$http.post(url, {groupID: newGroupId}).then(function (data) {
                         Vue.set(this.obj, groupId, data.body);//把请求数据存储本地
-                        this.obj[groupId].problemList.forEach(function(v,k){
+                        this.obj[groupId].problemList.forEach(function(v,k){//选择状态为false
                             v.answerOption.forEach(function(v1,k1){
                                 Vue.set(v1,'isChecked',false);
                             })
-                        })
-                        console.log(this.obj);
+                        });
                     },function(response){
                         console.log(response+"请求错误");
                     })
@@ -150,31 +166,33 @@
                 //答题的跳转逻辑
                 var that=this;
                 var ruleList=this.obj[pageN].ruleList;
-                console.log(pageN+";"+key+";"+name+";"+val+";"+index);
                 if(ruleList.length!==0){
                     for(var i=0;i<ruleList.length;i++){
                         var targetProblemInfoID=parseInt(ruleList[i].problemInfoID);//匹配问题id
                         var redirectID=parseInt(ruleList[i].redirectID);//跳转问题id
                         var answerOptionInfoNo=parseInt(ruleList[i].answerOptionInfoNo);//答案
+                        var redirectType=parseInt(ruleList[i].redirectType);
                         var sortIndex=parseInt(ruleList[i].sortIndex);//排序优先级
                         //和当前题组做比对
                         //第一种类型的跳转 单选本页跳转
-                        if(parseInt(ruleList[i].redirectType)===0){
+                        if(redirectType===0){
                             if(targetProblemInfoID===name){
                                 for(var j=0;j<that.obj[pageN].problemList.length;j++){
                                     if(that.obj[pageN].problemList[j].problemInfoID===redirectID){
                                         if(answerOptionInfoNo===val){
                                             that.obj[pageN].problemList[j].isShow=0;
+                                            that.obj[pageN].problemList[j].isRequired=1;
                                             return;
                                         }else{
                                             that.obj[pageN].problemList[j].isShow=1;
+                                            that.obj[pageN].problemList[j].isRequired=0;
                                         }
                                     }
                                 }
                             }
                         };
                         //第二种类型的跳转 多选它页跳转
-                        if(parseInt(ruleList[i].redirectType)===1){
+                        /*if(parseInt(ruleList[i].redirectType)===1){
                             if(targetProblemInfoID===name){
                                 var mulAns;
                                 for(var m=0;m<that.obj[pageN].problemList.length;m++){
@@ -186,11 +204,11 @@
                                         };
                                     }
                                 };
-                               /* if(mulAns===4){
+                               /!* if(mulAns===4){
                                     this.pageN=7
-                                }*/
+                                }*!/
                             }
-                        }
+                        }*/
                     }
                 }
 
@@ -203,54 +221,77 @@
                 this.obj.forEach(function(v,k){
                     arr[k]=[];//一个题组
                     v.problemList.forEach(function(v1,k1){
-                        arr[k][k1]={};//一个小题
-                        arr[k][k1].problemID=v1.problemInfoID;//小题的编号 唯一
-                        if(v1.proType===0){//单选
-                            v1.answerOption.forEach(function(v2,k2){
-                                if(v2.isChecked){
-                                    arr[k][k1].answerID=v2.id;
-                                }
-                            })
-                        }else if(v1.proType===1){//多选
-                            arr[k][k1].answerID=[]
-                            v1.answerOption.forEach(function(v2,k2){
-                                if(v2.isChecked){
-                                    arr[k][k1].answerID.push(v2.id);
-                                }
-                            })
-                        }
-                        //添加选择状态（是否选择）
-                        if(typeof arr[k][k1].answerID==="undefined"){//单选未选择
-                                Vue.set(v1,"unChoose",true)
-                        }else if(typeof arr[k][k1].answerID==="object"){//多选
-                            if(arr[k][k1].answerID.length===0){//未选择
-                                Vue.set(v1,"unChoose",true)
-                            }else {
-                                Vue.set(v1, "unChoose", false)//选择
+                        if(v1.isRequired===1){
+                            arr[k][k1]={};//一个小题
+                            arr[k][k1].problemID=v1.problemInfoID;//小题的编号 唯一
+                            if(v1.proType===0){//单选
+                                v1.answerOption.forEach(function(v2,k2){
+                                    if(v2.isChecked){
+                                        arr[k][k1].answerID=v2.id;
+                                    }
+                                })
+                            }else if(v1.proType===1){//多选
+                                arr[k][k1].answerID=[]
+                                v1.answerOption.forEach(function(v2,k2){
+                                    if(v2.isChecked){
+                                        arr[k][k1].answerID.push(v2.id);
+                                    }
+                                })
                             }
-                        }else{//单选选择
-                            Vue.set(v1,"unChoose",false)
+
+                            //添加选择状态（是否选择）
+                            if(typeof arr[k][k1].answerID==="undefined"){//单选未选择
+                                    Vue.set(v1,"unChoose",true)
+                            }else if(typeof arr[k][k1].answerID==="object"){//多选
+                                if(arr[k][k1].answerID.length===0){//未选择
+                                    Vue.set(v1,"unChoose",true)
+                                }else {
+                                    Vue.set(v1, "unChoose", false)//选择
+                                }
+                            }else{//单选选择
+                                Vue.set(v1,"unChoose",false)
+                            }
                         }
                     });
                     that.msg.model=that.msg.model.concat(arr[k])
                 });
+                //将数组打散成对象
+                that.msg.model.forEach(function(v,k){
+                        if(typeof v.answerID==="object"){
+                            v.answerID.forEach(function(v1,k1){
+                                that.msg.model.splice(k,1)
+                                var obj={};
+                                obj.problemID=v.problemID;
+                                obj.answerID=v1;
+                                that.msg.model.push(obj);
+                            })
+                        }
+                });
+                that.msg.sourceType=IsPC();
+                //数组去稀疏
+                for(var s=0; s<that.msg.model.length;s++){
+                    if(that.msg.model[s]===undefined){
+                        that.msg.model.splice(s,1)
+                    }
+                }
                 //提交答题
-                var url="#";
+                console.log(that.msg)
+                var url="http://hbgs12366.dfinfo.cn/api/Values/SaveAnswer";
                 if(this.checkedSubmit()){
-                    this.$http.post(url,this.msg).then(function(data){
-                        //console.log(data)
+                    this.$http.post(url,that.msg).then(function(data){
+                        console.log(data)
                     })
                 }else{
                     alert("未完成答题")
                 }
             },
+            //验证是否有answerID
             checkedSubmit:function(){
-                for(var i=0;i<this.obj.length;i++){
-                    for(var j=0;j<this.obj[i].problemList.length;j++){
-                        if(this.obj[i].problemList[j].unChoose===true){
-                            return false;
-                        }
-                    }
+                console.log(this.msg.model);
+                for(var i=0;i<this.msg.model.length;i++){
+                   if(this.msg.model[i].answerID===undefined){
+                       return false
+                   }
                 }
                 return true;
             }
