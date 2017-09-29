@@ -9,8 +9,36 @@
         .col-xs-6,.col-sm-2,.col-xs-12,.col-sm-4{
             padding-left: 30px;
         }
-        .container{
-
+        .notice{
+            background: #ddd;
+            position: absolute;
+            top:0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 10000;
+        }
+        .notice p{
+            padding: 30px;
+            margin-top: 50px;
+            margin-bottom: 30px;
+        }
+        .notice button{
+            display: block;
+            margin: 0 auto;
+        }
+        .cover{
+            background: rgba(250,250,250,.6);
+            position: absolute;
+            top:0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 2000;
+            text-align: center;
+            padding: 100px;
+        }
+        .cover img{
 
         }
         .row{
@@ -30,8 +58,15 @@
             padding: 10px;
             text-align: center;
         }
+        .title span{
+            padding: 0 10px;
+            display: none;
+        }
         .choose p{
             color:#f00;
+        }
+        .choose p span{
+            display: inline;
         }
         html{
             height: 100%;
@@ -46,17 +81,17 @@
             position: relative;
             min-height: 100%;
             padding: 10px;
-            padding-bottom: 50px;
-            background: #eec;
-
+            padding-bottom:50px;
+            background: #eec url('image/bc.jpg') no-repeat 0 0;
+            background-size: cover;
         }
         [type="radio"]{
-            height: 20px;
-            width:20px
+            height: 15px;
+            width:15px
         }
         [type="checkbox"]{
-            height: 20px;
-            width:20px
+            height: 15px;
+            width:15px
         }
     </style>
 </head>
@@ -83,14 +118,14 @@
     <div id="pageNum"><button  id="preItem" v-on:click="pre()">上一题</button>第 <span>{{pageN+1}}</span>/{{pageEnd+1}}<button id="nextItem" v-on:click="next()">下一题</button></div>
 </div>-->
 <div class="container" id="app">
-    <h2 style="text-align: center">2017年湖北省国税局纳税人满意度专项调查问卷</h2>
+
     <form @submit.prevent="submit">
         <div>
             <h4>{{obj[pageN].groupTitle}}</h4>
-            <div v-for="(pro,k) in obj[pageN].problemList"  v-if="pro.isShow===0?true:false" v-bind:class="{choose:pro.unChoose}">
-                <p>{{pro.problemInfoTitle}}</p>
-                <div class="container-fluid">
-                    <div v-for="(an,i) in pro.answerOption" v-bind:class="{'col-xs-6':pro.proType===0,'col-sm-2':pro.proType===0}">
+            <div style="margin-top: 5px" v-for="(pro,k) in obj[pageN].problemList"   v-if="pro.isShow===0?true:false" v-bind:class="{choose:pro.unChoose}">
+                <p class="title"><span>*</span>{{pro.problemInfoTitle}}</p>
+                <div class="container-fluid" style="border-bottom:1px solid #aaa">
+                    <div v-for="(an,i) in pro.answerOption" v-bind:class="{'col-xs-12':pro.proType===0,'col-sm-6':pro.proType===0}">
                         <label>
                             <input :checked="an.isChecked"  v-on:change="getMsg(pageN,k,pro.problemInfoID,an.id,i)"  v-bind:type="pro.proType===0?'radio':'checkbox'" v-bind:name="pro.problemInfoID" v-bind:value="an.id">
                             {{an.content}}
@@ -99,10 +134,25 @@
                 </div>
             </div>
         </div>
-        <input v-if="subButton" type="submit" class="btn btn-danger btn-lg btn-block" value="提交">
+        <input v-if="subButton" type="submit" style="margin-top: 30px" class="btn btn-danger btn-lg btn-block" value="提交">
     </form>
-    <div id="pageNum" class="navbar navbar-default navbar-fixed-bottom"><button  id="preItem" class="btn btn-primary" v-on:click="pre()">上一题</button>第 <span>{{pageN+1}}</span>/{{pageEnd+1}}<button id="nextItem" class="btn btn-primary" v-on:click="next()">下一题</button></div>
+    <div id="pageNum" class="navbar navbar-default navbar-fixed-bottom"><button  id="preItem" class="btn btn-primary" v-on:click="pre()">上一题</button><span style="padding:0 10px">第</span><span>{{pageN+1}}</span>/{{pageEnd+1}}<span style="padding:0 10px">题</span><button id="nextItem" class="btn btn-primary" v-on:click="next()">下一题</button></div>
+    <div class="notice" v-show="isAgree">
+        <h2 style="text-align: center">2017年湖北省国税局纳税人满意度专项调查问卷</h2>
+        <p>尊敬的纳税人：您好！<br/>
+            湖北省国家税务局现开展一次纳税人满意度调查。通过随机抽样，选定您作为纳税人代表。您的回答将为税务机关改进工作提供参考依据。您填报资料受统计法保护，我们将严格保密。感谢您的合作！<br/>
+            请点击以下网站进入答题区：
+        </p>
+        <button v-on:click="isAgree=false">点击进入答题</button>
+    </div>
+    <div class="notice" v-show="isFinish">
+        <h3 style="text-align: center;margin:100px">提交完成，感谢您的参与！</h3>
+    </div>
+    <div class="cover" v-show="isLoad">
+        <img src="image/load.gif" alt=""/>
+    </div>
 </div>
+
 <script type="text/javascript" src="js/jquery-1.11.3.js"></script>
 <script type="text/javascript" src="js/bootstrap.js"></script>
 <script type="text/javascript" src="js/vue.js"></script>
@@ -125,6 +175,9 @@
     var app1=new Vue({
         el:"#app",
         data:{
+            isFinish:false,
+            isAgree:true,
+            isLoad:false,
             pageN:0,//记录题组及页面
             pageEnd:9,//最后一题题组
             resId:0,
@@ -144,29 +197,52 @@
                     this.obj[i]={};
                 }
                 this.add(0);//加载第一页面
+
         },
         methods:{
             pre:function(){//向前翻页
                 this.pageN--;
                 this.pageN=this.pageN<0?0:this.pageN;
+                if(this.obj[this.pageN].groupIsShow===1){
+                    this.pageN--
+                }
                 this.add(this.pageN)
             },
             next:function(){//向后翻页
                 this.pageN++;
                 this.pageN=this.pageN>this.pageEnd?this.pageEnd:this.pageN;
+                if(this.obj[this.pageN].groupIsShow===1){
+                    this.pageN++
+                }
                 this.add(this.pageN)
+
             },
             add:function(groupId){//页面渲染
                 var url="http://hbgs12366.dfinfo.cn/api/Values/GetAnswerByID";
                 this.resId=groupId+1;
+                var that=this;
                 if(this.obj[groupId].groupID===undefined){
-                    this.$http.post(url, {groupID: this.resId}).then(function (data) {
+                    this.$http.post(url, {groupID: this.resId}).then(function (data){
                         Vue.set(this.obj, groupId, data.body);//把请求数据存储本地
                         this.obj[groupId].problemList.forEach(function(v,k){//选择状态为false
                             v.answerOption.forEach(function(v1,k1){
                                 Vue.set(v1,'isChecked',false);
                             })
                         });
+
+                        if(that.obj[groupId].groupIsShow===1){
+                            var param=4;
+                            that.obj[groupId-1].problemList[0].answerOption.forEach(function(v,k){
+                                if(v.isChecked===true){
+                                    param= v.id;
+                                }
+                            });
+                            if(param===4){
+                                this.next();
+                            }else{
+                                that.obj[groupId].groupIsShow=0
+                            }
+                        }
                     },function(response){
                         console.log(response+"请求错误");
                     })
@@ -177,11 +253,11 @@
                 }else{
                     this.subButton=false;
                 }
-                console.log(this.obj)
             },
             getMsg:function(pageN,key,name,val,index){
                 //pageN组 key题 name名称 val值 index选项
                 //更改选择状态
+                console.log(pageN+"-"+key+"-"+name+"-"+val+"-"+index)
                 if(this.obj[pageN].problemList[key].proType===0){//单选
                     this.obj[pageN].problemList[key].answerOption.forEach(function(v,k){
                         v.isChecked=false;
@@ -190,7 +266,6 @@
                 }else if(this.obj[pageN].problemList[key].proType===1){//多选
                     this.obj[pageN].problemList[key].answerOption[index].isChecked=!this.obj[pageN].problemList[key].answerOption[index].isChecked;
                 }
-                console.log(this.obj)
                 //答题的跳转逻辑
                 var that=this;
                 var ruleList=this.obj[pageN].ruleList;
@@ -219,27 +294,26 @@
                                 }
                             }
                         };
-                        //第二种类型的跳转 多选它页跳转
-                        /*if(parseInt(ruleList[i].redirectType)===1){
+                        //第二种类型的跳转
+                        if(redirectType===1){
                             if(targetProblemInfoID===name){
-                                var mulAns;
-                                for(var m=0;m<that.obj[pageN].problemList.length;m++){
-                                    if(that.obj[pageN].problemList[m].problemInfoID===targetProblemInfoID){
-                                        for(var n=0;n<that.obj[pageN].problemList[m].answerOption.length;n++){
-                                            if(that.obj[pageN].problemList[m].answerOption[n].isChecked===true){
-                                                mulAns=that.obj[pageN].problemList[m].answerOption[n].id;
-                                            }
-                                        };
+                                if(that.obj[pageN+1].problemList!==undefined){
+                                    for(var j=0;j<that.obj[pageN+1].problemList.length;j++){
+                                        if(val<4){
+                                            that.obj[pageN+1].groupIsShow=0;
+                                            that.obj[pageN+1].problemList[j].isRequired=1;
+                                            return;
+                                        }else{
+                                            that.obj[pageN+1].groupIsShow=1;
+                                            that.obj[pageN+1].problemList[j].isRequired=0;
+                                        }
                                     }
-                                };
-                               /!* if(mulAns===4){
-                                    this.pageN=7
-                                }*!/
+                                }
                             }
-                        }*/
+                        };
+
                     }
                 }
-
             },
             submit:function(){
                 //将obj内的数据添加给提交数组msg
@@ -287,7 +361,7 @@
                 that.msg.model.forEach(function(v,k){
                         if(typeof v.answerID==="object"){
                             v.answerID.forEach(function(v1,k1){
-                                that.msg.model.splice(k,1)
+                                that.msg.model.splice(k,1);
                                 var obj={};
                                 obj.problemID=v.problemID;
                                 obj.answerID=v1;
@@ -296,6 +370,7 @@
                         }
                 });
                 that.msg.sourceType=IsPC();
+                that.msg.taxAuthCode=this.getQueryString("taxcode")
                 //数组去稀疏
                 for(var s=0; s<that.msg.model.length;s++){
                     if(that.msg.model[s]===undefined){
@@ -303,20 +378,25 @@
                     }
                 }
                 //提交答题
-                console.log(that.msg)
                 var url="http://hbgs12366.dfinfo.cn/api/Values/SaveAnswer";
                 if(this.checkedSubmit()){
                     this.$http.post(url,that.msg).then(function(data){
-                        console.log(data)
+                        this.isFinish=true;
+                        console.log("提交成功")
                     })
                 }else{
-                    alert("未完成答题")
+                    alert("未完成答题!\n带星号的是必填题，请继续填写")
                 }
             },
             //验证是否有answerID
-            checkedSubmit:function(){
+    getQueryString:function (name) {
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+            var r = window.location.search.substr(1).match(reg);
+            if (r != null) return unescape(r[2]); return null;
+        },
+    checkedSubmit:function(){
                 for(var i=0;i<this.msg.model.length;i++){
-                   if(this.msg.model[i].answerID===undefined){
+                   if(this.msg.model[i].answerID===undefined||this.msg.model[i].answerID.length===0){
                        return false
                    }
                 }
@@ -324,7 +404,14 @@
             }
         }
     });
-
+    Vue.http.interceptors.push(function(request, next) {
+        app1.isLoad=true;
+        console.log(request)
+        next(function(response) {
+            app1.isLoad=false;
+            console.log(response)
+        })
+    })
 </script>
 </body>
 </html>
