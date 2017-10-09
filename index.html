@@ -8,6 +8,7 @@
     <style>
         .col-xs-6,.col-sm-2,.col-xs-12,.col-sm-4{
             padding-left: 30px;
+            line-height: 30px;
         }
         .notice{
             background: #ddd;
@@ -16,7 +17,7 @@
             bottom: 0;
             left: 0;
             right: 0;
-            z-index: 10000;
+            z-index: 3000;
         }
         .notice p{
             padding: 30px;
@@ -38,8 +39,17 @@
             text-align: center;
             padding: 100px;
         }
-        .cover img{
 
+        .answer{
+            background:#ddd;
+            position: absolute;
+            top:0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 3100;
+            text-align: center;
+            padding-top: 100px;
         }
         .row{
             padding:10px;
@@ -86,12 +96,14 @@
             background-size: cover;
         }
         [type="radio"]{
-            height: 15px;
-            width:15px
+            height: 18px;
+            width:18px;
+            vertical-align: middle;
         }
         [type="checkbox"]{
-            height: 15px;
-            width:15px
+            height: 18px;
+            width:18px;
+            vertical-align: middle;
         }
     </style>
 </head>
@@ -121,32 +133,37 @@
 
     <form @submit.prevent="submit">
         <div>
-            <h4>{{obj[pageN].groupTitle}}</h4>
+            <h3>{{obj[pageN].groupTitle}}</h3>
             <div style="margin-top: 5px" v-for="(pro,k) in obj[pageN].problemList"   v-if="pro.isShow===0?true:false" v-bind:class="{choose:pro.unChoose}">
-                <p class="title"><span>*</span>{{pro.problemInfoTitle}}</p>
+                <h4 class="title"><span>*</span>{{pro.problemInfoTitle}}</h4>
                 <div class="container-fluid" style="border-bottom:1px solid #aaa">
                     <div v-for="(an,i) in pro.answerOption" v-bind:class="{'col-xs-12':pro.proType===0,'col-sm-6':pro.proType===0}">
-                        <label>
-                            <input :checked="an.isChecked"  v-on:change="getMsg(pageN,k,pro.problemInfoID,an.id,i)"  v-bind:type="pro.proType===0?'radio':'checkbox'" v-bind:name="pro.problemInfoID" v-bind:value="an.id">
+                        <label style="cursor: pointer">
+                            <input style="margin: 0;" :checked="an.isChecked"  v-on:change="getMsg(pageN,k,pro.problemInfoID,an.id,i)"  v-bind:type="pro.proType===0?'radio':'checkbox'" v-bind:name="pro.problemInfoID" v-bind:value="an.id">
                             {{an.content}}
                         </label>
                     </div>
                 </div>
             </div>
+            <textarea v-model="obj[pageN].content" cols="20" placeholder="请留下您宝贵的建议" v-if="obj[pageN].isContent===1"></textarea>
         </div>
         <input v-if="subButton" type="submit" style="margin-top: 30px" class="btn btn-danger btn-lg btn-block" value="提交">
     </form>
     <div id="pageNum" class="navbar navbar-default navbar-fixed-bottom"><button  id="preItem" class="btn btn-primary" v-on:click="pre()">上一题</button><span style="padding:0 10px">第</span><span>{{pageN+1}}</span>/{{pageEnd+1}}<span style="padding:0 10px">题</span><button id="nextItem" class="btn btn-primary" v-on:click="next()">下一题</button></div>
     <div class="notice" v-show="isAgree">
+        <p>欢迎 <b>{{companyName}}</b> 进入问卷调查页面!</p>
         <h2 style="text-align: center">2017年湖北省国税局纳税人满意度专项调查问卷</h2>
         <p>尊敬的纳税人：您好！<br/>
             湖北省国家税务局现开展一次纳税人满意度调查。通过随机抽样，选定您作为纳税人代表。您的回答将为税务机关改进工作提供参考依据。您填报资料受统计法保护，我们将严格保密。感谢您的合作！<br/>
             请点击以下网站进入答题区：
         </p>
-        <button v-on:click="isAgree=false">点击进入答题</button>
+        <button v-on:click="start">点击进入答题</button>
     </div>
     <div class="notice" v-show="isFinish">
         <h3 style="text-align: center;margin:100px">提交完成，感谢您的参与！</h3>
+    </div>
+    <div class="answer" v-show="isAnswer">
+        <h3 style="text-align: center;margin:10px" v-text="noTiceMsg"></h3>
     </div>
     <div class="cover" v-show="isLoad">
         <img src="image/load.gif" alt=""/>
@@ -158,7 +175,8 @@
 <script type="text/javascript" src="js/vue.js"></script>
 <script type="text/javascript" src="js/vue-resource.js"></script>
 <script>
-    function IsPC(){
+    //判断pc和phone暂时不用
+    /*function IsPC(){
         var userAgentInfo = navigator.userAgent;
         var Agents = new Array("Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod");
         var flag = true;
@@ -171,13 +189,18 @@
             }
         }
         return flag;
-    }
+    }*/
     var app1=new Vue({
         el:"#app",
         data:{
-            isFinish:false,
+            isFinish:false,//是否完成答题
             isAgree:true,
             isLoad:false,
+            isAnswer:true,//是否已经答过
+            timer:null,
+            time:0,
+            companyName:"",
+            noTiceMsg:"加载中....请稍后",
             pageN:0,//记录题组及页面
             pageEnd:9,//最后一题题组
             resId:0,
@@ -186,12 +209,24 @@
             msg:{//提交的数据
                 model: [//盛放题组的容器
                 ],
+                groupInfoAr:[],
                 sourceType:"",
                 sourceDetail: "string",
                 taxAuthCode: "string"
             }
         },
         mounted:function(){
+            this.$http.post("http://hbgs12366.dfinfo.cn/api/Values/CheckTaxCode", {taxCode: this.getQueryString("taxcode")}).then(function (data){
+                if(data.body.data===0){
+                    this.isAnswer=false;
+                    this.companyName=data.body.companyName;
+                }else{
+                    this.isAnswer=true;
+                    this.noTiceMsg=data.body.message;
+                }
+            },function(response){
+                console.log(response+"请求错误");
+            });
                 this.obj=new Array(10);
                 for(var i=0;i<this.obj.length;i++){
                     this.obj[i]={};
@@ -200,6 +235,15 @@
 
         },
         methods:{
+            start:function(){
+                var that=this;
+                this.isAgree=false;
+                this.timer=setInterval(function(){
+                    that.time++;
+                    console.log(that.time)
+                },1000);
+
+            },
             pre:function(){//向前翻页
                 this.pageN--;
                 this.pageN=this.pageN<0?0:this.pageN;
@@ -224,6 +268,7 @@
                 if(this.obj[groupId].groupID===undefined){
                     this.$http.post(url, {groupID: this.resId}).then(function (data){
                         Vue.set(this.obj, groupId, data.body);//把请求数据存储本地
+                        Vue.set(this.obj[groupId],'content',"");//添加备注
                         this.obj[groupId].problemList.forEach(function(v,k){//选择状态为false
                             v.answerOption.forEach(function(v1,k1){
                                 Vue.set(v1,'isChecked',false);
@@ -322,6 +367,12 @@
                 var that=this;
                 this.obj.forEach(function(v,k){
                     arr[k]=[];//一个题组
+                    if(v.isContent===1&&v.content!==""){
+                        var obj={};
+                        obj.groupID= v.groupID;
+                        obj.groupContent= v.content;
+                        that.msg.groupInfoAr.push(obj)
+                    }
                     v.problemList.forEach(function(v1,k1){
                         if(v1.isRequired===1){
                             arr[k][k1]={};//一个小题
@@ -369,8 +420,9 @@
                             })
                         }
                 });
-                that.msg.sourceType=IsPC();
-                that.msg.taxAuthCode=this.getQueryString("taxcode")
+                that.msg.sourceType=this.getQueryString("source");
+                that.msg.taxAuthCode=this.getQueryString("taxcode");
+                that.msg.useTime=this.time;
                 //数组去稀疏
                 for(var s=0; s<that.msg.model.length;s++){
                     if(that.msg.model[s]===undefined){
@@ -380,20 +432,22 @@
                 //提交答题
                 var url="http://hbgs12366.dfinfo.cn/api/Values/SaveAnswer";
                 if(this.checkedSubmit()){
+                    clearInterval(this.timer);
                     this.$http.post(url,that.msg).then(function(data){
                         this.isFinish=true;
+                        this.time=0;
                         console.log("提交成功")
                     })
                 }else{
-                    alert("未完成答题!\n带星号的是必填题，请继续填写")
+                    alert("未完成答题!\n带*号红色字体的是必填题，请继续填写")
                 }
             },
-            //验证是否有answerID
     getQueryString:function (name) {
             var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
             var r = window.location.search.substr(1).match(reg);
             if (r != null) return unescape(r[2]); return null;
         },
+            //验证是否有answerID
     checkedSubmit:function(){
                 for(var i=0;i<this.msg.model.length;i++){
                    if(this.msg.model[i].answerID===undefined||this.msg.model[i].answerID.length===0){
@@ -406,7 +460,6 @@
     });
     Vue.http.interceptors.push(function(request, next) {
         app1.isLoad=true;
-        console.log(request)
         next(function(response) {
             app1.isLoad=false;
             console.log(response)
